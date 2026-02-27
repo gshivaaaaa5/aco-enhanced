@@ -1,0 +1,6 @@
+[0/2] Re-checking globbed directories...
+ninja: no work to do.
+[0/2] Re-checking globbed directories...
+ninja: no work to do.
+/home/merin/ns-3-dev/build/scratch/ns3-dev-aco-test-default: symbol lookup error: /home/merin/ns-3-dev/build/lib/libns3-dev-aco-default.so: undefined symbol: _ZN3ns33aco15RoutingProtocol31SendRerrWhenBreaksLinkToNextHopENS_11Ipv4AddressE
+Command 'build/scratch/ns3-dev-aco-test-default' returned non-zero exit status 127.

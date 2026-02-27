@@ -1,0 +1,31 @@
+build_lib(
+  LIBNAME aco
+  SOURCE_FILES
+    helper/aco-helper.cc
+    model/aco-dpd.cc
+    model/aco-id-cache.cc
+    model/aco-neighbor.cc
+    model/aco-packet.cc
+    model/aco-routing-protocol.cc
+    model/aco-rqueue.cc
+    model/aco-rtable.cc
+  HEADER_FILES
+    helper/aco-helper.h
+    model/aco-dpd.h
+    model/aco-id-cache.h
+    model/aco-neighbor.h
+    model/aco-packet.h
+    model/aco-routing-protocol.h
+    model/aco-rqueue.h
+    model/aco-rtable.h
+  LIBRARIES_TO_LINK
+    ${libapplications}
+    ${libinternet-apps}
+    ${libwifi}
+  TEST_SOURCES
+    test/aco-id-cache-test-suite.cc
+    test/aco-regression.cc
+    test/aco-test-suite.cc
+    test/loopback.cc
+    test/bug-772.cc
+)
