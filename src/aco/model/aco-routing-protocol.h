@@ -102,7 +102,7 @@ private:
   bool m_enableBroadcast;
   Time m_discoveryStart;    // To track when a route search begins
   uint32_t m_totalAntsSent; // To track the total number of RREQs (Ants)
-  int m_simulatedQueue;
+  int m_simulatedQueue
 
   // IP Layer and Sockets
   Ptr<Ipv4> m_ipv4;
