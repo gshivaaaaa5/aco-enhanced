@@ -6,3 +6,8 @@
 !subdir/
 !scratch-simulator.cc
 !CMakeLists.txt
+
+# ADD THESE LINES:
+!*.cc
+!*.h
+!*/
