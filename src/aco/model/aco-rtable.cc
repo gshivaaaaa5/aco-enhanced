@@ -424,6 +424,17 @@ RoutingTable::Print(Ptr<OutputStreamWrapper> stream, Time::Unit unit /* = Time::
     }
     *os << "\n";
 }
+std::vector<RoutingTableEntry>
+RoutingTable::GetAllRoutes()
+{
+    std::vector<RoutingTableEntry> routes;
 
+    for (auto const &entry : m_ipv4AddressEntry)
+    {
+        routes.push_back(entry.second);
+    }
+
+    return routes;
+}
 } // namespace aco
 } // namespace ns3

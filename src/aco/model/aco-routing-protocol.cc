@@ -25,6 +25,7 @@ RoutingProtocol::RoutingProtocol()
       m_rreqCount(0), m_rerrCount(0), m_htimer(Timer::CANCEL_ON_DESTROY),
       m_totalAntsSent(0), m_simulatedQueue(0),
       m_rreqRateLimitTimer(Timer::CANCEL_ON_DESTROY), 
+      m_pheromoneEvapTimer(Timer::CANCEL_ON_DESTROY),
       m_rerrRateLimitTimer(Timer::CANCEL_ON_DESTROY)
 {
     m_nb.SetCallback(MakeCallback(&RoutingProtocol::SendRerrWhenBreaksLinkToNextHop, this));
@@ -64,18 +65,36 @@ void RoutingProtocol::RouteRequestTimerExpire(Ipv4Address dst) {
     SendRequest(dst);
 }
 
-bool RoutingProtocol::RouteInput(Ptr<const Packet> p, const Ipv4Header& header, Ptr<const NetDevice> idev,
-                                 const UnicastForwardCallback& ucb, const MulticastForwardCallback& mcb,
-                                 const LocalDeliverCallback& lcb, const ErrorCallback& ecb) 
+bool RoutingProtocol::RouteInput(
+    Ptr<const Packet> p,
+    const Ipv4Header& header,
+    Ptr<const NetDevice> idev,
+    const UnicastForwardCallback& ucb,
+    const MulticastForwardCallback& mcb,
+    const LocalDeliverCallback& lcb,
+    const ErrorCallback& ecb)
 {
     Ipv4Address dst = header.GetDestination();
-    Ipv4Address origin = header.GetSource();
     int32_t iif = m_ipv4->GetInterfaceForDevice(idev);
-    if (IsMyOwnAddress(origin)) return true;
-    if (m_ipv4->IsDestinationAddress(dst, iif)) {
-        if (!lcb.IsNull()) lcb(p, header, iif);
+
+    // If packet is for this node
+    if (m_ipv4->IsDestinationAddress(dst, iif))
+    {
+        if (!lcb.IsNull())
+        {
+            lcb(p, header, iif);
+        }
         return true;
     }
+
+    // Forward packet
+    RoutingTableEntry rt;
+    if (m_routingTable.LookupValidRoute(dst, rt))
+    {
+        ucb(rt.GetRoute(), p, header);
+        return true;
+    }
+
     return false;
 }
 
@@ -83,59 +102,82 @@ Ptr<Ipv4Route> RoutingProtocol::RouteOutput(Ptr<Packet> p, const Ipv4Header& hea
     Ipv4Address dst = header.GetDestination();
     RoutingTableEntry rt;
     uint32_t numNodes = NodeList::GetNNodes();
-
+																											
     // 1. Check if we have a valid, strong route
-    if (m_routingTable.LookupValidRoute(dst, rt)) {
-        if (rt.GetPheromone() < 0.1) {
-            // Pheromone is too weak! Evaporated. Delete and search again.
-            m_routingTable.DeleteRoute(dst);
+    // 1. Check if we have a valid, strong route
+if (m_routingTable.LookupValidRoute(dst, rt)) {
+    if (rt.GetPheromone() < 0.1) {
+        // Pheromone is too weak! Evaporated. Delete and search again.
+        m_routingTable.DeleteRoute(dst);
+    } else {
+        // Route is good! Drain the queue.
+        if (m_simulatedQueue > 0) m_simulatedQueue -= 5; 
+        if (m_simulatedQueue < 0) m_simulatedQueue = 0;
+        
+        Ptr<Ipv4Route> route = Create<Ipv4Route>();
+        route->SetDestination(dst);
+
+        // --- FIX 1: Prevent 0.0.0.0 Source IP ---
+        if (header.GetSource() == Ipv4Address::GetZero()) {
+            route->SetSource(rt.GetInterface().GetLocal());
         } else {
-            // Route is good! Drain the queue.
-            if (m_simulatedQueue > 0) m_simulatedQueue -= 5; 
-            if (m_simulatedQueue < 0) m_simulatedQueue = 0;
-            
-            Ptr<Ipv4Route> route = Create<Ipv4Route>();
-            route->SetDestination(dst);
             route->SetSource(header.GetSource());
-            route->SetGateway(dst); 
-            route->SetOutputDevice(m_ipv4->GetNetDevice(1));
-            return route;
         }
+
+        route->SetGateway(rt.GetNextHop());
+        route->SetOutputDevice(rt.GetOutputDevice());
+        return route;
     }
+}
 
     // 2. NO ROUTE: Packet is stuck in buffer! Queue grows.
-    m_simulatedQueue++;
-    if (m_simulatedQueue > 64) m_simulatedQueue = 64; 
-    
-    // Scale the congestion appropriately to reflect physical interference limits
-    double max_expected = 0.0;
-    if (numNodes <= 10) max_expected = 0.08;
-    else if (numNodes <= 50) max_expected = 0.28;
-    else if (numNodes <= 100) max_expected = 0.55;
-    else if (numNodes <= 150) max_expected = 0.81;
-    else max_expected = 0.96;
+// Simulate packets arriving
+// packet arrival
+m_simulatedQueue += 2;
 
-    double congestion = ((double)m_simulatedQueue / 64.0) * max_expected;
-    
-    // Print only occasionally to reduce terminal spam
-    if (m_simulatedQueue % 10 == 0 || m_simulatedQueue == 64) {
-        NS_LOG_UNCOND("METRIC_CONGESTION: " << congestion);
+if (m_simulatedQueue > 64)
+    m_simulatedQueue = 64;
+
+// simulate packets leaving buffer
+if (m_simulatedQueue > 0)
+    m_simulatedQueue -= 1;
+// congestion ratio
+double congestion = (double)m_simulatedQueue / 64.0;
+
+
+
+// Print occasionally
+// Print occasionally
+if (m_simulatedQueue % 10 == 0)
+{
+    NS_LOG_UNCOND("METRIC_CONGESTION: " << congestion);
+}
+
+// --- FIX 2: Stop queueing local UDP packets to prevent SIGSEGV ---
+// QueueEntry newEntry(p, header, UnicastForwardCallback(), ErrorCallback(), Simulator::Now());
+// m_queue.Enqueue(newEntry);
+
+// 4. Send ant (route request)
+if (dst != Ipv4Address("255.255.255.255") && 
+    dst != Ipv4Address("10.1.1.255") &&
+    dst != Ipv4Address::GetZero() &&
+    !dst.IsMulticast())
+{
+    if (m_addressReqTimer.find(dst) == m_addressReqTimer.end())
+    {
+        SendRequest(dst);
+
+        m_addressReqTimer[dst] =
+            Simulator::Schedule(Seconds(1),
+                                &RoutingProtocol::RouteRequestTimerExpire,
+                                this,
+                                dst);
     }
+}
 
-    // 3. Send Ant
-    if (dst != Ipv4Address("255.255.255.255") && dst != Ipv4Address("10.1.1.255")) {
-        if (m_addressReqTimer.find(dst) == m_addressReqTimer.end()) {
-            SendRequest(dst);
-            m_addressReqTimer[dst] = Simulator::Schedule(Seconds(1), &RoutingProtocol::RouteRequestTimerExpire, this, dst);
-        }
-    }
-
-    sockerr = Socket::ERROR_NOROUTETOHOST;
-    Ptr<Ipv4Route> dummy = Create<Ipv4Route>();
-    dummy->SetDestination(dst);
-    dummy->SetGateway(Ipv4Address("127.0.0.1"));
-    dummy->SetOutputDevice(m_lo);
-    return dummy;
+// 5. Tell ns3 the route is not ready yet
+sockerr = Socket::ERROR_NOROUTETOHOST;
+return nullptr;
 }
 
 void RoutingProtocol::RecvAco(Ptr<Socket> socket) {}
@@ -148,17 +190,23 @@ void RoutingProtocol::SetIpv4(Ptr<Ipv4> ipv4) {
 
 bool RoutingProtocol::IsMyOwnAddress(Ipv4Address src) { return false; }
 
-Ptr<Ipv4Route> RoutingProtocol::LoopbackRoute(const Ipv4Header &header, Ptr<NetDevice> oif) const {
-    Ptr<Ipv4Route> rt = Create<Ipv4Route>();
-    rt->SetDestination(header.GetDestination());
-    rt->SetGateway(Ipv4Address("127.0.0.1"));
-    rt->SetOutputDevice(m_lo);
-    return rt;
+Ptr<Ipv4Route>
+RoutingProtocol::LoopbackRoute(const Ipv4Header &header, Ptr<NetDevice> oif) const
+{
+    return nullptr;
 }
 
-void RoutingProtocol::Start() {
-    m_rreqRateLimitTimer.SetFunction(&RoutingProtocol::RreqRateLimitTimerExpire, this);
+void RoutingProtocol::Start()
+{
+    m_rreqRateLimitTimer.SetFunction(
+        &RoutingProtocol::RreqRateLimitTimerExpire, this);
     m_rreqRateLimitTimer.Schedule(Seconds(1));
+
+    // Start dynamic pheromone evaporation
+    m_pheromoneEvapTimer.SetFunction(
+        &RoutingProtocol::EvaporatePheromones, this);
+
+    m_pheromoneEvapTimer.Schedule(Seconds(1));
 }
 
 void RoutingProtocol::NotifyInterfaceUp(uint32_t i) {
@@ -188,23 +236,76 @@ void RoutingProtocol::SendRequest (Ipv4Address dst) {
     Simulator::Schedule(MilliSeconds(delayMs), &RoutingProtocol::RecvReply, this, nullptr, m_ipv4->GetAddress(1,0).GetLocal(), dst);
 }
 
-void RoutingProtocol::RecvReply (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address sender) {
+void RoutingProtocol::RecvReply (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address sender)
+{
+    if (sender == Ipv4Address::GetZero())
+    {
+        NS_LOG_UNCOND("ACO ERROR: Invalid destination (0.0.0.0) — ignoring route");
+        return;
+    }
+
     Time timeTaken = Simulator::Now() - m_discoveryStart;
     double delaySeconds = timeTaken.GetSeconds();
-    if (delaySeconds <= 0) delaySeconds = 0.001; 
+    if (delaySeconds <= 0) delaySeconds = 0.001;
 
-    double Q = 1.0; 
-    double deltaPheromone = Q / delaySeconds; 
+    double Q = 1.0;
+    double deltaPheromone = Q / delaySeconds;
 
-    NS_LOG_UNCOND("METRIC_PATH_TIME: " << delaySeconds << " seconds");
-    NS_LOG_UNCOND("ACO DEPOSIT: Delta Pheromone calculated as " << deltaPheromone);
+    //NS_LOG_UNCOND("METRIC_PATH_TIME: " << delaySeconds << " seconds");
+    //NS_LOG_UNCOND("ACO DEPOSIT: Delta Pheromone calculated as " << deltaPheromone);
 
     Ipv4Address dst = sender;
-    Ipv4InterfaceAddress iface = m_ipv4->GetAddress(1, 0);
-    
-    RoutingTableEntry newTableEntry (m_ipv4->GetNetDevice(1), dst, true, 1, iface, 1, dst, Seconds(15.0));
-    newTableEntry.SetPheromone(deltaPheromone);
+Ipv4InterfaceAddress iface = m_ipv4->GetAddress(1,0);
+
+RoutingTableEntry existing;
+double current = 0;
+
+if (m_routingTable.LookupRoute(dst, existing))
+{
+    current = existing.GetPheromone();
+}
+
+double newPheromone = current + deltaPheromone;
+
+RoutingTableEntry newTableEntry(
+    m_ipv4->GetNetDevice(1),
+    dst,
+    true,
+    1,
+    iface,
+    1,
+    dst,       // <--- FIX: Point the Next Hop directly to the destination
+    Seconds(15.0));
+newTableEntry.SetPheromone(newPheromone);
+
+if (!m_routingTable.Update(newTableEntry))
+{
     m_routingTable.AddRoute(newTableEntry);
+}
+
+NS_LOG_UNCOND("ACO NEW PHEROMONE: " << newPheromone);
+
+// -----------------------------
+// SEND QUEUED PACKETS
+// -----------------------------
+
+RoutingTableEntry rt;
+
+if (m_routingTable.LookupValidRoute(dst, rt))
+{
+    Ptr<Ipv4Route> route = Create<Ipv4Route>();
+    route->SetDestination(dst);
+    route->SetGateway(rt.GetNextHop());
+    route->SetOutputDevice(rt.GetOutputDevice());
+    route->SetSource(rt.GetInterface().GetLocal());
+
+    SendPacketFromQueue(dst, route);
+}
+if (sender == Ipv4Address("0.0.0.0"))
+{
+    NS_LOG_UNCOND("ACO WARNING: Invalid sender address, ignoring reply");
+    return;
+}
 }
 
 void RoutingProtocol::RecvRequest (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address src) { }
@@ -217,5 +318,75 @@ void RoutingProtocol::NotifyInterfaceDown(uint32_t i) {}
 void RoutingProtocol::NotifyAddAddress(uint32_t i, Ipv4InterfaceAddress address) {}
 void RoutingProtocol::NotifyRemoveAddress(uint32_t i, Ipv4InterfaceAddress address) {}
 
+void RoutingProtocol::EvaporatePheromones()
+{
+    double congestion = (double)m_simulatedQueue / 64.0;
+
+    double base = 0.2;
+double k = 0.5;
+
+double rho = base + k * congestion;
+
+if (rho > 0.5){
+    rho = 0.5;}
+
+    std::vector<RoutingTableEntry> routes =
+        m_routingTable.GetAllRoutes();
+
+    for (auto &entry : routes)
+    {
+        double oldP = entry.GetPheromone();
+
+        double newP = oldP * (1 - rho);
+
+        entry.SetPheromone(newP);
+
+        m_routingTable.Update(entry);
+
+        NS_LOG_UNCOND(
+            "ACO DYNAMIC EVAPORATION | rho="
+            << rho
+            << " | old=" << oldP
+            << " | new=" << newP);
+    }
+
+    m_pheromoneEvapTimer.Schedule(Seconds(1));
+}
+
+void
+RoutingProtocol::SendPacketFromQueue(Ipv4Address dst, Ptr<Ipv4Route> route)
+{
+    QueueEntry entry;
+    if (route == nullptr)
+{
+    NS_LOG_UNCOND("ACO: Route is null, dropping packet");
+    return;
+}
+if (route->GetGateway() == Ipv4Address::GetZero())
+{
+    NS_LOG_UNCOND("ACO: Dropping packet due to invalid route");
+    return;
+}																																																																																																																																																																																																																																																																																																																															
+
+if (route->GetGateway() == Ipv4Address::GetZero())
+{
+    NS_LOG_UNCOND("ACO: Invalid gateway, dropping packet");
+    return;
+}
+    while (m_queue.Dequeue(dst, entry))
+    {
+        Ptr<const Packet> packet = entry.GetPacket();
+        Ipv4Header header = entry.GetIpv4Header();
+
+        NS_LOG_UNCOND("ACO: Sending queued packet to " << dst);
+
+        UnicastForwardCallback ucb = entry.GetUnicastForwardCallback();
+
+        if (!ucb.IsNull())
+        {
+            ucb(route, packet, header);
+        }
+    }
+}
 } // namespace aco
 } // namespace ns3

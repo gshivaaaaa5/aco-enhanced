@@ -113,7 +113,7 @@ public:
     void Purge();
     bool MarkLinkAsUnidirectional(Ipv4Address neighbor, Time blacklistTimeout);
     void Print(Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S) const;
-
+    std::vector<RoutingTableEntry> GetAllRoutes();
 private:
     std::map<Ipv4Address, RoutingTableEntry> m_ipv4AddressEntry;
     Time m_badLinkLifetime;

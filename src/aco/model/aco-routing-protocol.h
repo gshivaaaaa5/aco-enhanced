@@ -75,7 +75,7 @@ protected:
   virtual void DoInitialize (void);
 
 private:
-
+  
   uint32_t m_rreqRetries;
   uint16_t m_ttlStart;
   uint16_t m_ttlIncrement;
@@ -102,8 +102,8 @@ private:
   bool m_enableBroadcast;
   Time m_discoveryStart;    // To track when a route search begins
   uint32_t m_totalAntsSent; // To track the total number of RREQs (Ants)
-  int m_simulatedQueue
-
+  int m_simulatedQueue;
+  
   // IP Layer and Sockets
   Ptr<Ipv4> m_ipv4;
   std::map<Ptr<Socket>, Ipv4InterfaceAddress> m_socketAddresses;
@@ -125,7 +125,7 @@ private:
   Timer m_htimer;
   Timer m_rreqRateLimitTimer;
   Timer m_rerrRateLimitTimer;
-  
+  Timer m_pheromoneEvapTimer;
   // Tracking RREQ retries using EventId for safety/efficiency
   std::map<Ipv4Address, EventId> m_addressReqTimer;
 
@@ -162,7 +162,10 @@ private:
   void RreqRateLimitTimerExpire ();
   void RerrRateLimitTimerExpire ();
   void HelloTimerExpire ();
-
+  
+  
+  void EvaporatePheromones();
+  
   bool IsMyOwnAddress (Ipv4Address src);
   Ptr<Ipv4Route> LoopbackRoute (const Ipv4Header & header, Ptr<NetDevice> oif) const;
   Ptr<Socket> FindSocketWithInterfaceAddress (Ipv4InterfaceAddress iface) const;
