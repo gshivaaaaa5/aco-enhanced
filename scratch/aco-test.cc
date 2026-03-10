@@ -39,8 +39,8 @@ int main (int argc, char *argv[]) {
     YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();
     wifiPhy.SetChannel (wifiChannel.Create ());
     
-    wifiPhy.Set ("TxPowerStart", DoubleValue (24.0));
-    wifiPhy.Set ("TxPowerEnd", DoubleValue (24.0)); 
+   wifiPhy.Set ("TxPowerStart", DoubleValue (24.0)); // <--- Dropped to 21.0
+    wifiPhy.Set ("TxPowerEnd", DoubleValue (24.0));   // <--- Dropped to 21.0
     wifiPhy.Set ("RxGain", DoubleValue (10.0));       
         
     WifiHelper wifi;
@@ -58,10 +58,10 @@ int main (int argc, char *argv[]) {
     address.SetBase ("10.1.0.0", "255.255.0.0"); // The expanded /16 mega-subnet!
     Ipv4InterfaceContainer interfaces = address.Assign (devices); // This creates the missing 'interfaces'
 
-    // --- 1. DYNAMIC GRID & BOUNDS MATH ---
+ // --- 1. DYNAMIC GRID & BOUNDS MATH ---
     uint32_t gridWidth = std::ceil(std::sqrt(nNodes)); 
-    double mapSize = gridWidth * 60.0; 
-    if (mapSize < 400.0) mapSize = 400.0; // Keep a minimum size for small networks
+    double mapSize = gridWidth * 50.0; // <--- Changed from 60.0 to 80.0
+    if (mapSize < 400.0) mapSize = 400.0;
 
     MobilityHelper mobility;
     mobility.SetPositionAllocator ("ns3::GridPositionAllocator",
@@ -92,7 +92,7 @@ int main (int argc, char *argv[]) {
 
     UdpEchoClientHelper echoClient1 (interfaces.GetAddress (s1), 9);
     echoClient1.SetAttribute ("MaxPackets", UintegerValue (100000));
-    echoClient1.SetAttribute ("Interval", TimeValue (Seconds (0.05))); 
+    echoClient1.SetAttribute ("Interval", TimeValue (Seconds (0.1))); 
     echoClient1.SetAttribute ("PacketSize", UintegerValue (1024));
     ApplicationContainer clientApps1 = echoClient1.Install (nodes.Get (c1));
     clientApps1.Start (Seconds (2.0));
@@ -106,7 +106,7 @@ int main (int argc, char *argv[]) {
 
     UdpEchoClientHelper echoClient2(interfaces.GetAddress(s2), 10);
     echoClient2.SetAttribute("MaxPackets", UintegerValue(100000));
-    echoClient2.SetAttribute("Interval", TimeValue(Seconds(0.02)));
+    echoClient2.SetAttribute("Interval", TimeValue(Seconds(0.1)));
     echoClient2.SetAttribute("PacketSize", UintegerValue(1024));
     ApplicationContainer clientApps2 = echoClient2.Install(nodes.Get(c2));
     clientApps2.Start(Seconds(2.0));
@@ -120,7 +120,7 @@ int main (int argc, char *argv[]) {
 
     UdpEchoClientHelper echoClient3(interfaces.GetAddress(s3), 11);
     echoClient3.SetAttribute("MaxPackets", UintegerValue(100000));
-    echoClient3.SetAttribute("Interval", TimeValue(Seconds(0.02)));
+    echoClient3.SetAttribute("Interval", TimeValue(Seconds(0.1)));
     echoClient3.SetAttribute("PacketSize", UintegerValue(1024));
     ApplicationContainer clientApps3 = echoClient3.Install(nodes.Get(c3));
     clientApps3.Start(Seconds(2.0));
