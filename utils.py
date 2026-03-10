@@ -1,116 +1,37 @@
-#! /usr/bin/env python3
-
-# These methods are used by test.py to look for and read the
-# .ns3rc configuration file, which is used to specify the modules that
-# should be enabled
-
 import os
+import re
 
+# ... (Keep all your existing get_list_from_file, read_config_file, etc. here) ...
 
-def get_list_from_file(file_path, list_name):
-    """Looks for a Python list called list_name in the file specified
-    by file_path and returns it.
-
-    If the file or list name aren't found, this function will return
-    an empty list.
-
+def extract_standard_metrics(node_count):
     """
-
-    # Read in the file if it exists.
-    if not os.path.exists(file_path):
-        return []
-
-    with open(file_path, "r", encoding="utf-8") as file_in:
-        # Look for the list.
-        list_string = ""
-        parsing_multiline_list = False
-        for line in file_in:
-            # Remove any comments.
-            if "#" in line:
-                (line, comment) = line.split("#", 1)
-
-            # Parse the line.
-            if list_name in line or parsing_multiline_list:
-                list_string += line
-
-                # Handle multiline lists.
-                if "]" not in list_string:
-                    parsing_multiline_list = True
-                else:
-                    # Evaluate the list once its end is reached.
-                    # Make the split function only split it once.
-                    return eval(list_string.split("=", 1)[1].strip())
-
-    # List name was not found
-    return []
-
-
-def get_bool_from_file(file_path, bool_name, value_if_missing):
-    """Looks for a Python boolean variable called bool_name in the
-    file specified by file_path and returns its value.
-
-    If the file or boolean variable aren't found, this function will
-    return value_if_missing.
-
+    Standardizes data extraction for the EACO-DE project.
+    Reads 'nresults_XX.txt' and returns PDR, Delay, and Throughput.
     """
+    filename = f"nresults_{node_count}.txt"
+    
+    if not os.path.exists(filename):
+        print(f"Error: {filename} not found!")
+        return 0.0, 0.0, 0.0
 
-    # Read in the file if it exists.
-    if not os.path.exists(file_path):
-        return value_if_missing
-
-    with open(file_path, "r", encoding="utf-8") as file_in:
-        # Look for the boolean variable.
-        for line in file_in:
-            # Remove any comments.
-            if "#" in line:
-                (line, comment) = line.split("#", 1)
-
-            # Parse the line.
-            if bool_name in line:
-                # Evaluate the variable's line once it is found.  Make
-                # the split function only split it once.
-                return eval(line.split("=", 1)[1].strip())
-
-    # Boolean variable was not found
-    return value_if_missing
-
-
-# Reads the NS-3 configuration file and returns a list of enabled modules.
-#
-# This function first looks for the ns3 configuration file (.ns3rc) in
-# the current working directory and then looks in the ~ directory.
-def read_config_file():
-    # By default, all modules will be enabled, examples will be disabled,
-    # and tests will be disabled.
-    modules_enabled = ["all_modules"]
-    examples_enabled = False
-    tests_enabled = False
-
-    # See if the ns3 configuration file exists in the current working
-    # directory and then look for it in the ~ directory.
-    config_file_exists = False
-    dot_ns3rc_name = ".ns3rc"
-    dot_ns3rc_path = dot_ns3rc_name
-    if not os.path.exists(dot_ns3rc_path):
-        dot_ns3rc_path = os.path.expanduser("~/") + dot_ns3rc_name
-        if not os.path.exists(dot_ns3rc_path):
-            # Return all of the default values if the .ns3rc file can't be found.
-            return (config_file_exists, modules_enabled, examples_enabled, tests_enabled)
-
-    config_file_exists = True
-
-    # Read in the enabled modules.
-    modules_enabled = get_list_from_file(dot_ns3rc_path, "modules_enabled")
-    if not modules_enabled:
-        # Enable all modules if the modules_enabled line can't be found.
-        modules_enabled = ["all_modules"]
-
-    # Read in whether examples should be enabled or not.
-    value_if_missing = False
-    examples_enabled = get_bool_from_file(dot_ns3rc_path, "examples_enabled", value_if_missing)
-
-    # Read in whether tests should be enabled or not.
-    value_if_missing = False
-    tests_enabled = get_bool_from_file(dot_ns3rc_path, "tests_enabled", value_if_missing)
-
-    return (config_file_exists, modules_enabled, examples_enabled, tests_enabled)
+    try:
+        with open(filename, "r", encoding="utf-8") as f:
+            data = f.read()
+            
+            # 1. Extract PDR (%) - Matches the "FINAL PDR (Packet Delivery Ratio):" line
+            pdr_match = re.search(r"Ratio\): ([\d.]+)", data)
+            pdr = float(pdr_match.group(1)) if pdr_match else 0.0
+            
+            # 2. Extract Delay (ms) - Matches the "> Avg Delay :" line
+            delay_match = re.search(r"Delay : ([\d.]+)", data)
+            delay = float(delay_match.group(1)) if delay_match else 0.0
+            
+            # 3. Extract Throughput (Mbps) - Matches the "> Throughput:" line
+            tp_match = re.search(r"Throughput: ([\d.]+)", data)
+            throughput = float(tp_match.group(1)) if tp_match else 0.0
+            
+            return pdr, delay, throughput
+            
+    except Exception as e:
+        print(f"Error processing {filename}: {e}")
+        return 0.0, 0.0, 0.0
