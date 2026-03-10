@@ -5,6 +5,14 @@
 #include "ns3/ipv4-l3-protocol.h"
 #include "ns3/node-list.h" 
 
+struct AntPacket {
+    uint8_t type;  // 1 for Forward Ant (F-ANT), 2 for Backward Ant (B-ANT)
+    uint32_t src;  // Original sender IP
+    uint32_t dst;  // Final destination IP
+    uint32_t antId; // Unique ID to stop broadcast storms
+} __attribute__((packed));
+
+
 namespace ns3 {
 NS_LOG_COMPONENT_DEFINE("AcoRoutingProtocol");
 namespace aco {
@@ -66,31 +74,33 @@ void RoutingProtocol::RouteRequestTimerExpire(Ipv4Address dst) {
 }
 
 bool RoutingProtocol::RouteInput(
-    Ptr<const Packet> p,
-    const Ipv4Header& header,
-    Ptr<const NetDevice> idev,
-    const UnicastForwardCallback& ucb,
-    const MulticastForwardCallback& mcb,
-    const LocalDeliverCallback& lcb,
-    const ErrorCallback& ecb)
+    Ptr<const Packet> p, const Ipv4Header& header, Ptr<const NetDevice> idev,
+    const UnicastForwardCallback& ucb, const MulticastForwardCallback& mcb,
+    const LocalDeliverCallback& lcb, const ErrorCallback& ecb)
 {
     Ipv4Address dst = header.GetDestination();
     int32_t iif = m_ipv4->GetInterfaceForDevice(idev);
+    Ipv4Address myIp = m_ipv4->GetAddress(1,0).GetLocal(); // Get this drone's IP
 
-    // If packet is for this node
+    // 1. If the packet is meant for THIS drone (Final Destination)
     if (m_ipv4->IsDestinationAddress(dst, iif))
     {
-        if (!lcb.IsNull())
-        {
+        NS_LOG_UNCOND("PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> " << myIp);
+        if (!lcb.IsNull()) {
             lcb(p, header, iif);
         }
         return true;
     }
 
-    // Forward packet
+    // 2. If the packet is meant for someone else, Forward it! (Intermediate Hops)
     RoutingTableEntry rt;
     if (m_routingTable.LookupValidRoute(dst, rt))
     {
+        // Only print tracking for the actual UDP data packets to avoid spam
+        if (dst == Ipv4Address("10.1.1.41") || dst == Ipv4Address("10.1.1.51") || dst == Ipv4Address("10.1.1.31")) {
+            NS_LOG_UNCOND("PATH TRACKER [HOP]: Middle Drone " << myIp << " catching packet for " << dst << " and forwarding to Next Hop -> " << rt.GetNextHop());
+        }
+        
         ucb(rt.GetRoute(), p, header);
         return true;
     }
@@ -98,8 +108,22 @@ bool RoutingProtocol::RouteInput(
     return false;
 }
 
+
 Ptr<Ipv4Route> RoutingProtocol::RouteOutput(Ptr<Packet> p, const Ipv4Header& header, Ptr<NetDevice> oif, Socket::SocketErrno& sockerr) {
     Ipv4Address dst = header.GetDestination();
+    
+    // --- FIX 1: Allow F-ANT Broadcasts to reach the antenna! ---
+    if (dst.IsBroadcast() || dst == Ipv4Address("255.255.255.255") || dst == Ipv4Address("10.1.1.255")) {
+        Ptr<Ipv4Route> route = Create<Ipv4Route>();
+        route->SetDestination(dst);
+        route->SetGateway(Ipv4Address::GetZero());
+        route->SetSource(m_ipv4->GetAddress(1,0).GetLocal());
+        route->SetOutputDevice(m_ipv4->GetNetDevice(1));
+        return route;
+    }
+    
+ 
+    
     RoutingTableEntry rt;
     uint32_t numNodes = NodeList::GetNNodes();
 																											
@@ -126,6 +150,7 @@ if (m_routingTable.LookupValidRoute(dst, rt)) {
 
         route->SetGateway(rt.GetNextHop());
         route->SetOutputDevice(rt.GetOutputDevice());
+        NS_LOG_UNCOND("PATH TRACKER [START]: Source " << route->GetSource() << " sending to " << dst << " via First Hop -> " << rt.GetNextHop());
         return route;
     }
 }
@@ -180,7 +205,111 @@ sockerr = Socket::ERROR_NOROUTETOHOST;
 return nullptr;
 }
 
-void RoutingProtocol::RecvAco(Ptr<Socket> socket) {}
+void RoutingProtocol::RecvAco(Ptr<Socket> socket) {
+    Address sourceAddress;
+    Ptr<Packet> packet = socket->RecvFrom(sourceAddress);
+    InetSocketAddress inetSourceAddr = InetSocketAddress::ConvertFrom(sourceAddress);
+    Ipv4Address sender = inetSourceAddr.GetIpv4(); // The drone that just handed us the packet
+    Ipv4Address myIp = m_ipv4->GetAddress(1,0).GetLocal();
+
+    if (sender == myIp) return; // Ignore our own echoes
+
+    // Open the packet to see what kind of Ant it is
+    AntPacket ant;
+    packet->CopyData((uint8_t*)&ant, sizeof(AntPacket));
+    Ipv4Address originalSrc(ant.src);
+    Ipv4Address targetDst(ant.dst);
+
+    // ==========================================
+    // LOGIC 1: FORWARD ANT (F-ANT)
+    // ==========================================
+    if (ant.type == 1) {
+        // Prevent infinite broadcast storms using a unique combination of Src IP and Ant ID
+        uint64_t uniqueAntId = ((uint64_t)ant.src << 32) | ant.antId;
+        if (m_seenAnts.find(uniqueAntId) != m_seenAnts.end()) return;
+        m_seenAnts[uniqueAntId] = true; 
+
+        // 1. Breadcrumb to the Original Source
+        RoutingTableEntry rt;
+        if (!m_routingTable.LookupRoute(originalSrc, rt)) {
+            RoutingTableEntry newEntry(m_ipv4->GetNetDevice(1), originalSrc, true, 1, m_ipv4->GetAddress(1,0), 1, sender, Seconds(15.0));
+            newEntry.SetPheromone(1.0);
+            m_routingTable.AddRoute(newEntry);
+        }
+
+        // --- FIX 2: Add direct 1-hop route to the neighbor so B-ANTs can step backwards ---
+        RoutingTableEntry neighborRt;
+        if (!m_routingTable.LookupRoute(sender, neighborRt)) {
+            RoutingTableEntry nEntry(m_ipv4->GetNetDevice(1), sender, true, 1, m_ipv4->GetAddress(1,0), 1, sender, Seconds(15.0));
+            nEntry.SetPheromone(1.0);
+            m_routingTable.AddRoute(nEntry);
+        }
+
+        if (myIp == targetDst) {
+            // I AM THE DESTINATION! The ant found me! 
+            NS_LOG_UNCOND("ACO: Destination " << myIp << " reached! Bouncing Backward Ant back.");
+            
+            // Mutate the ant into a B-ANT and send it backwards
+            AntPacket bAnt;
+            bAnt.type = 2; // B-ANT
+            bAnt.src = originalSrc.Get();
+            bAnt.dst = targetDst.Get();
+            bAnt.antId = ant.antId;
+
+            Ptr<Packet> bPacket = Create<Packet>((uint8_t*)&bAnt, sizeof(AntPacket));
+            socket->SendTo(bPacket, 0, InetSocketAddress(sender, ACO_PORT)); // Unicast directly to previous hop
+        } else {
+            // I am just a middle drone. Re-broadcast the F-ANT further across the grid.
+            Ptr<Packet> fPacket = Create<Packet>((uint8_t*)&ant, sizeof(AntPacket));
+            socket->SendTo(fPacket, 0, InetSocketAddress(Ipv4Address("255.255.255.255"), ACO_PORT));
+        }
+    }
+    
+    // ==========================================
+    // LOGIC 2: BACKWARD ANT (B-ANT)
+    // ==========================================
+    else if (ant.type == 2) {
+        // Calculate Pheromone based on network delay
+        Time timeTaken = Simulator::Now() - m_discoveryStart;
+        double delaySeconds = timeTaken.GetSeconds();
+        if (delaySeconds <= 0) delaySeconds = 0.001;
+        double deltaPheromone = 1.0 / delaySeconds;
+
+        // Establish the forward route pointing towards the destination
+        RoutingTableEntry rt;
+        if (m_routingTable.LookupRoute(targetDst, rt)) {
+            rt.SetPheromone(rt.GetPheromone() + deltaPheromone);
+            rt.SetNextHop(sender);
+            m_routingTable.Update(rt);
+        } else {
+            RoutingTableEntry newEntry(m_ipv4->GetNetDevice(1), targetDst, true, 1, m_ipv4->GetAddress(1,0), 1, sender, Seconds(15.0));
+            newEntry.SetPheromone(1.0 + deltaPheromone);
+            m_routingTable.AddRoute(newEntry);
+        }
+
+        if (myIp == originalSrc) {
+            // THE B-ANT MADE IT BACK HOME! Multi-hop route is established!
+            NS_LOG_UNCOND("ACO NEW PHEROMONE: " << (1.0 + deltaPheromone) << " via intermediate node " << sender);
+            
+            // Release the queued data packets across the new multi-hop route
+            if (m_routingTable.LookupValidRoute(targetDst, rt)) {
+                Ptr<Ipv4Route> route = Create<Ipv4Route>();
+                route->SetDestination(targetDst);
+                route->SetGateway(rt.GetNextHop()); // Points to the first intermediate drone
+                route->SetOutputDevice(m_ipv4->GetNetDevice(1));
+                route->SetSource(myIp);
+                SendPacketFromQueue(targetDst, route);
+            }
+        } else {
+            // I am a middle drone. Pass the B-ANT backward to the next hop using the breadcrumb trail
+            RoutingTableEntry reverseRt;
+            if (m_routingTable.LookupValidRoute(originalSrc, reverseRt)) {
+                Ptr<Packet> bPacket = Create<Packet>((uint8_t*)&ant, sizeof(AntPacket));
+                socket->SendTo(bPacket, 0, InetSocketAddress(reverseRt.GetNextHop(), ACO_PORT));
+            }
+        }
+    }
+}
 
 void RoutingProtocol::SetIpv4(Ptr<Ipv4> ipv4) {
     m_ipv4 = ipv4;
@@ -213,10 +342,15 @@ void RoutingProtocol::NotifyInterfaceUp(uint32_t i) {
     Ptr<Ipv4L3Protocol> l3 = m_ipv4->GetObject<Ipv4L3Protocol>();
     Ipv4InterfaceAddress iface = l3->GetAddress(i, 0);
     if (iface.GetLocal() == Ipv4Address::GetLoopback()) return;
+    
     Ptr<Socket> socket = Socket::CreateSocket(GetObject<Node>(), UdpSocketFactory::GetTypeId());
     socket->SetRecvCallback(MakeCallback(&RoutingProtocol::RecvAco, this));
-    socket->Bind(InetSocketAddress(iface.GetLocal(), ACO_PORT));
+    
+    // --- THE FIX: Bind to GetAny() so we can hear 255.255.255.255 Broadcasts! ---
+    socket->Bind(InetSocketAddress(Ipv4Address::GetAny(), ACO_PORT)); 
+    socket->BindToNetDevice(m_ipv4->GetNetDevice(i)); // Lock it to the Wi-Fi interface
     socket->SetAllowBroadcast(true);
+    
     m_socketAddresses[socket] = iface;
 }
 
@@ -228,17 +362,27 @@ bool RoutingProtocol::UpdateRouteLifeTime(Ipv4Address addr, Time lifetime) { ret
 
 void RoutingProtocol::SendRequest (Ipv4Address dst) { 
     m_totalAntsSent++;
+    m_requestId++; // Generate a unique ID for this ant
     m_discoveryStart = Simulator::Now();
-    NS_LOG_UNCOND("METRIC_ANT_COUNT: " << m_totalAntsSent);
-    
-    uint32_t numNodes = NodeList::GetNNodes();
-    uint32_t delayMs = 15 + (numNodes * 3); 
-    Simulator::Schedule(MilliSeconds(delayMs), &RoutingProtocol::RecvReply, this, nullptr, m_ipv4->GetAddress(1,0).GetLocal(), dst);
-}
+    NS_LOG_UNCOND("ACO: Broadcasting Forward Ant to find " << dst);
 
+    AntPacket ant;
+    ant.type = 1; // F-ANT
+    ant.src = m_ipv4->GetAddress(1,0).GetLocal().Get();
+    ant.dst = dst.Get();
+    ant.antId = m_requestId;
+
+    // Convert our struct into a physical NS-3 packet
+    Ptr<Packet> packet = Create<Packet>((uint8_t*)&ant, sizeof(AntPacket));
+
+    // Broadcast the ant over the Wi-Fi PHY layer
+    for (auto const& [socket, iface] : m_socketAddresses) {
+        socket->SendTo(packet, 0, InetSocketAddress(Ipv4Address("255.255.255.255"), ACO_PORT));
+    }
+}
 void RoutingProtocol::RecvReply (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address sender)
 {
-    if (sender == Ipv4Address::GetZero())
+    /*if (sender == Ipv4Address::GetZero())
     {
         NS_LOG_UNCOND("ACO ERROR: Invalid destination (0.0.0.0) — ignoring route");
         return;
@@ -305,7 +449,7 @@ if (sender == Ipv4Address("0.0.0.0"))
 {
     NS_LOG_UNCOND("ACO WARNING: Invalid sender address, ignoring reply");
     return;
-}
+}*/
 }
 
 void RoutingProtocol::RecvRequest (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address src) { }

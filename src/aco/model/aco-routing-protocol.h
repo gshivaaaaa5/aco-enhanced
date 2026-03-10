@@ -75,7 +75,7 @@ protected:
   virtual void DoInitialize (void);
 
 private:
-  
+  std::map<uint32_t, bool> m_seenAnts;
   uint32_t m_rreqRetries;
   uint16_t m_ttlStart;
   uint16_t m_ttlIncrement;
