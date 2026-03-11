@@ -1,10 +1,10 @@
             ACO FANET PERFORMANCE RESULTS               
 ========================================================
 Network Size: 200 Drones
-  > Tx Packets: 247
-  > Rx Packets: 94
-  > Throughput: 0.0247735 Mbps
-  > Avg Delay : 162.282 ms
+  > Tx Packets: 493
+  > Rx Packets: 272
+  > Throughput: 0.0470276 Mbps
+  > Avg Delay : 104.446 ms
 --------------------------------------------------------
- FINAL PDR (Packet Delivery Ratio): 38.0567 %
+ FINAL PDR (Packet Delivery Ratio): 55.1724 %
 ========================================================
