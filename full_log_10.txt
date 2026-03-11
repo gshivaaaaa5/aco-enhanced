@@ -1,3 +1,11 @@
+[  0%] Building CXX object scratch/CMakeFiles/scratch_aco-test.dir/aco-test.cc.o
+[  0%] Linking CXX executable /home/gshiva/ns3-friend/build/scratch/ns3-dev-aco-test-default
+OPTIMAL_RESULT: 0.848
+CONGESTION_DATA: Rate=0.05
+CONGESTION_DATA: Rate=0.05
+CONGESTION_DATA: Rate=0.05
+CONGESTION_DATA: Rate=0.05
+CONGESTION_DATA: Rate=0.05
 ACO: Broadcasting Forward Ant to find 10.1.0.10
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.2
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.3
@@ -24,6 +32,7 @@ PATH TRACKER [START]: Source 10.1.0.1 sending to 10.1.0.10 via First Hop -> 10.1
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.10
 PATH TRACKER [START]: Source 10.1.0.10 sending to 10.1.0.1 via First Hop -> 10.1.0.3
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.1
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=54.5329 | new=43.6263
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=1 | new=0.8
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=1 | new=0.8
@@ -102,6 +111,7 @@ PATH TRACKER [START]: Source 10.1.0.1 sending to 10.1.0.10 via First Hop -> 10.1
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.10
 PATH TRACKER [START]: Source 10.1.0.10 sending to 10.1.0.1 via First Hop -> 10.1.0.3
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.1
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=135.394 | new=108.316
 ACO DYNAMIC EVAPORATION | rho=0.2625 | old=0.615 | new=0.453563
 ACO DYNAMIC EVAPORATION | rho=0.23125 | old=0.64 | new=0.492
@@ -174,6 +184,7 @@ PATH TRACKER [START]: Source 10.1.0.1 sending to 10.1.0.10 via First Hop -> 10.1
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.10
 PATH TRACKER [START]: Source 10.1.0.10 sending to 10.1.0.1 via First Hop -> 10.1.0.3
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.1
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=86.6524 | new=69.3219
 ACO DYNAMIC EVAPORATION | rho=0.325 | old=0.320329 | new=0.216222
 ACO DYNAMIC EVAPORATION | rho=0.29375 | old=0.36285 | new=0.256263
@@ -246,6 +257,7 @@ METRIC_CONGESTION: 0.3125
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.10
 PATH TRACKER [START]: Source 10.1.0.10 sending to 10.1.0.1 via First Hop -> 10.1.0.3
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.1
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=55.4576 | new=44.366
 ACO DYNAMIC EVAPORATION | rho=0.3875 | old=0.139193 | new=0.0852556
 ACO DYNAMIC EVAPORATION | rho=0.35625 | old=0.172977 | new=0.111354
@@ -317,6 +329,7 @@ PATH TRACKER [START]: Source 10.1.0.1 sending to 10.1.0.10 via First Hop -> 10.1
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.10
 PATH TRACKER [START]: Source 10.1.0.10 sending to 10.1.0.1 via First Hop -> 10.1.0.3
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.1
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=35.4928 | new=28.3943
 ACO DYNAMIC EVAPORATION | rho=0.45 | old=0.0495548 | new=0.0272551
 ACO DYNAMIC EVAPORATION | rho=0.41875 | old=0.0682044 | new=0.0396438
@@ -389,6 +402,7 @@ METRIC_CONGESTION: 0.625
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.10
 PATH TRACKER [START]: Source 10.1.0.10 sending to 10.1.0.1 via First Hop -> 10.1.0.3
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.1
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=22.7154 | new=18.1723
 ACO DYNAMIC EVAPORATION | rho=0.5 | old=0.0141386 | new=0.0070693
 ACO DYNAMIC EVAPORATION | rho=0.48125 | old=0.0218041 | new=0.0113109
@@ -470,6 +484,7 @@ PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.7
 PATH TRACKER [START]: Source 10.1.0.1 sending to 10.1.0.10 via First Hop -> 10.1.0.3
 PATH TRACKER [START]: Source 10.1.0.1 sending to 10.1.0.10 via First Hop -> 10.1.0.3
 PATH TRACKER [START]: Source 10.1.0.1 sending to 10.1.0.10 via First Hop -> 10.1.0.3
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=1 | new=0.8
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=1 | new=0.8
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=14.5379 | new=11.6303
@@ -606,6 +621,7 @@ PATH TRACKER [START]: Source 10.1.0.3 sending to 10.1.0.8 via First Hop -> 10.1.
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.8
 PATH TRACKER [START]: Source 10.1.0.8 sending to 10.1.0.3 via First Hop -> 10.1.0.7
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.3
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0.64 | new=0.512
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0.64 | new=0.512
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=9.30423 | new=7.44339
@@ -703,6 +719,7 @@ PATH TRACKER [START]: Source 10.1.0.3 sending to 10.1.0.8 via First Hop -> 10.1.
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.8
 PATH TRACKER [START]: Source 10.1.0.8 sending to 10.1.0.3 via First Hop -> 10.1.0.7
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.3
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.254688 | old=1 | new=0.745313
 ACO DYNAMIC EVAPORATION | rho=0.254688 | old=0.3976 | new=0.296336
 ACO DYNAMIC EVAPORATION | rho=0.254688 | old=0.3976 | new=0.296336
@@ -839,6 +856,7 @@ PATH TRACKER [START]: Source 10.1.0.3 sending to 10.1.0.8 via First Hop -> 10.1.
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.8
 PATH TRACKER [START]: Source 10.1.0.8 sending to 10.1.0.3 via First Hop -> 10.1.0.7
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.3
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.317188 | old=0.5322 | new=0.363393
 ACO DYNAMIC EVAPORATION | rho=0.317188 | old=0.211603 | new=0.144485
 ACO DYNAMIC EVAPORATION | rho=0.317188 | old=0.211603 | new=0.144485
@@ -946,6 +964,7 @@ PATH TRACKER [START]: Source 10.1.0.3 sending to 10.1.0.8 via First Hop -> 10.1.
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.8
 PATH TRACKER [START]: Source 10.1.0.8 sending to 10.1.0.3 via First Hop -> 10.1.0.7
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.3
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.379688 | old=0.236773 | new=0.146873
 ACO DYNAMIC EVAPORATION | rho=0.379688 | old=0.0941409 | new=0.0583968
 ACO DYNAMIC EVAPORATION | rho=0.379688 | old=0.0941409 | new=0.0583968
@@ -1080,6 +1099,7 @@ PATH TRACKER [START]: Source 10.1.0.3 sending to 10.1.0.8 via First Hop -> 10.1.
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.8
 PATH TRACKER [START]: Source 10.1.0.8 sending to 10.1.0.3 via First Hop -> 10.1.0.7
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.3
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.442188 | old=0.0865175 | new=0.0482606
 ACO DYNAMIC EVAPORATION | rho=0.442188 | old=0.0343994 | new=0.0191884
 ACO DYNAMIC EVAPORATION | rho=0.442188 | old=0.0343994 | new=0.0191884
@@ -1229,6 +1249,7 @@ PATH TRACKER [START]: Source 10.1.0.3 sending to 10.1.0.8 via First Hop -> 10.1.
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.8
 PATH TRACKER [START]: Source 10.1.0.3 sending to 10.1.0.8 via First Hop -> 10.1.0.7
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.8
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.5 | old=0.0254122 | new=0.0127061
 ACO DYNAMIC EVAPORATION | rho=0.5 | old=0.0101039 | new=0.00505195
 ACO DYNAMIC EVAPORATION | rho=0.5 | old=0.0101039 | new=0.00505195
@@ -1389,6 +1410,7 @@ PATH TRACKER [START]: Source 10.1.0.3 sending to 10.1.0.8 via First Hop -> 10.1.
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.8
 PATH TRACKER [START]: Source 10.1.0.8 sending to 10.1.0.3 via First Hop -> 10.1.0.3
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.3
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.5 | old=0.00635305 | new=0.00317652
 ACO DYNAMIC EVAPORATION | rho=0.5 | old=0.00252597 | new=0.00126299
 ACO DYNAMIC EVAPORATION | rho=0.5 | old=0.00252597 | new=0.00126299
@@ -1559,6 +1581,7 @@ PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.10
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.4
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.3
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.1
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.5 | old=0.00158826 | new=0.000794131
 ACO DYNAMIC EVAPORATION | rho=0.5 | old=0 | new=0
 ACO DYNAMIC EVAPORATION | rho=0.5 | old=0 | new=0
@@ -1768,6 +1791,7 @@ PATH TRACKER [START]: Source 10.1.0.1 sending to 10.1.0.10 via First Hop -> 10.1
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.10
 PATH TRACKER [START]: Source 10.1.0.10 sending to 10.1.0.1 via First Hop -> 10.1.0.1
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.1
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.5 | old=0.000397066 | new=0.000198533
 ACO DYNAMIC EVAPORATION | rho=0.5 | old=0 | new=0
 ACO DYNAMIC EVAPORATION | rho=0.5 | old=0.5 | new=0.25
@@ -1912,6 +1936,7 @@ PATH TRACKER [START]: Source 10.1.0.1 sending to 10.1.0.10 via First Hop -> 10.1
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.10
 PATH TRACKER [START]: Source 10.1.0.1 sending to 10.1.0.10 via First Hop -> 10.1.0.10
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.10
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.285938 | old=0 | new=0
 ACO DYNAMIC EVAPORATION | rho=0.285938 | old=0 | new=0
 ACO DYNAMIC EVAPORATION | rho=0.285938 | old=0.139453 | new=0.0995782
@@ -2078,6 +2103,7 @@ PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.1
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.4
 PATH TRACKER [START]: Source 10.1.0.1 sending to 10.1.0.10 via First Hop -> 10.1.0.10
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.10
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0 | new=0
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0 | new=0
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0.0796626 | new=0.0637301
@@ -2216,6 +2242,7 @@ PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.3
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.7
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.10
 ACO NEW PHEROMONE: 409.663 via intermediate node 10.1.0.1
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0 | new=0
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0 | new=0
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0.0509841 | new=0.0407873
@@ -2359,6 +2386,7 @@ PATH TRACKER [START]: Source 10.1.0.1 sending to 10.1.0.10 via First Hop -> 10.1
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.10
 PATH TRACKER [START]: Source 10.1.0.10 sending to 10.1.0.1 via First Hop -> 10.1.0.1
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.1
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0 | new=0
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0 | new=0
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0.0326298 | new=0.0261038
@@ -2501,6 +2529,7 @@ PATH TRACKER [START]: Source 10.1.0.1 sending to 10.1.0.10 via First Hop -> 10.1
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.10
 PATH TRACKER [START]: Source 10.1.0.10 sending to 10.1.0.1 via First Hop -> 10.1.0.1
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.1
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0 | new=0
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0 | new=0
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0.0208831 | new=0.0167065
@@ -2655,6 +2684,7 @@ PATH TRACKER [START]: Source 10.1.0.1 sending to 10.1.0.10 via First Hop -> 10.1
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.10
 PATH TRACKER [START]: Source 10.1.0.10 sending to 10.1.0.1 via First Hop -> 10.1.0.1
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.1
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0 | new=0
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=1 | new=0.8
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0.0133652 | new=0.0106921
@@ -2817,6 +2847,7 @@ PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.8
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.10
 PATH TRACKER [START]: Source 10.1.0.10 sending to 10.1.0.1 via First Hop -> 10.1.0.1
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.1
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0 | new=0
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0.64 | new=0.512
 ACO DYNAMIC EVAPORATION | rho=0.2 | old=0 | new=0
@@ -2967,6 +2998,7 @@ PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.4
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.9
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.3
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.8
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.246875 | old=1 | new=0.753125
 ACO DYNAMIC EVAPORATION | rho=0.246875 | old=0.4016 | new=0.302455
 ACO DYNAMIC EVAPORATION | rho=0.246875 | old=0 | new=0
@@ -3137,6 +3169,7 @@ PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.1
 ACO NEW PHEROMONE: 144.623 via intermediate node 10.1.0.10
 PATH TRACKER [START]: Source 10.1.0.3 sending to 10.1.0.8 via First Hop -> 10.1.0.8
 PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> 10.1.0.8
+CONGESTION_DATA: Rate=0.05
 ACO DYNAMIC EVAPORATION | rho=0.309375 | old=0.543662 | new=0.375467
 ACO DYNAMIC EVAPORATION | rho=0.309375 | old=0.218335 | new=0.150787
 ACO DYNAMIC EVAPORATION | rho=0.309375 | old=0 | new=0

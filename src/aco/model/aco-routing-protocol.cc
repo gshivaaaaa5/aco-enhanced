@@ -83,11 +83,18 @@ bool RoutingProtocol::RouteInput(
     Ipv4Address myIp = m_ipv4->GetAddress(1,0).GetLocal(); // Get this drone's IP
 
     // 1. If the packet is meant for THIS drone (Final Destination)
+    // 1. If the packet is meant for THIS drone (Final Destination)
     if (m_ipv4->IsDestinationAddress(dst, iif))
     {
-        NS_LOG_UNCOND("PATH TRACKER [ARRIVED]: Packet successfully reached Destination -> " << myIp);
+        // Tracker: Only log the 512B UDP packets, ignore small routing ants 
+        if (p->GetSize() > 100) 
+        {
+            NS_LOG_UNCOND("PATH_TRACE | PktUID: " << p->GetUid() 
+                          << " | *** DESTINATION REACHED: " << myIp << " ***");
+        }
+
         if (!lcb.IsNull()) {
-            lcb(p, header, iif);
+            lcb(p, header, iif);             
         }
         return true;
     }
@@ -96,9 +103,12 @@ bool RoutingProtocol::RouteInput(
     RoutingTableEntry rt;
     if (m_routingTable.LookupValidRoute(dst, rt))
     {
-        // Only print tracking for the actual UDP data packets to avoid spam
-        if (dst == Ipv4Address("10.1.1.41") || dst == Ipv4Address("10.1.1.51") || dst == Ipv4Address("10.1.1.31")) {
-            NS_LOG_UNCOND("PATH TRACKER [HOP]: Middle Drone " << myIp << " catching packet for " << dst << " and forwarding to Next Hop -> " << rt.GetNextHop());
+        // Tracker: Packet is hopping through an intermediate drone
+        if (p->GetSize() > 100) { // Filter out tiny routing ants
+            NS_LOG_UNCOND("PATH_TRACE | PktUID: " << p->GetUid() 
+                          << " | FWD Node: " << myIp 
+                          << " -> HOP: " << rt.GetNextHop() 
+                          << " | Final DST: " << dst);
         }
         
         ucb(rt.GetRoute(), p, header);
@@ -150,7 +160,11 @@ if (m_routingTable.LookupValidRoute(dst, rt)) {
 
         route->SetGateway(rt.GetNextHop());
         route->SetOutputDevice(rt.GetOutputDevice());
-        NS_LOG_UNCOND("PATH TRACKER [START]: Source " << route->GetSource() << " sending to " << dst << " via First Hop -> " << rt.GetNextHop());
+        // Replace your current NS_LOG_UNCOND with this:
+NS_LOG_UNCOND("PATH_TRACE | PktUID: " << p->GetUid() 
+              << " | SRC: " << route->GetSource() 
+              << " -> HOP: " << rt.GetNextHop() 
+              << " | DST: " << dst);
         return route;
     }
 }
