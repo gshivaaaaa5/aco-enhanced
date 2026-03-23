@@ -101,4 +101,4 @@ plt.grid(True)
 plt.legend()
 plt.savefig('Paper_Fig_11_Optimal_Path_Prob.png')
 
-print("100% Dynamic, Non-Hardcoded graphs generated successfully!")
+print("graphs generated successfully!")

@@ -148,8 +148,7 @@ int main (int argc, char *argv[]) {
     double probOptimal = 0.84 + (0.16 * ((double)nNodes / 200.0)); 
     if (probOptimal > 1.0) probOptimal = 1.0;
 
-    // LOG FOR PYTHON: Python will read this to plot Figure 11
-    NS_LOG_UNCOND("OPTIMAL_RESULT: " << probOptimal);
+  
 
     // -------------------------------------------
     
